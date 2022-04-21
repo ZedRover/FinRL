@@ -4,7 +4,7 @@ pandas>=1.1.5
 stockstats>=0.4.0
 yfinance
 elegantrl
-#pyfolio
+pyfolio
 # plot
 matplotlib
 
@@ -21,10 +21,9 @@ gputil
 # market data & paper trading API
 exchange_calendars
 alpaca_trade_api
-ccxt>=1.66.32
+# ccxt>=1.66.32
 jqdatasdk
 wrds
-
 # testing requirements
 pytest
 
