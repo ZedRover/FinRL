@@ -35,60 +35,12 @@ from finrl.config import (
 '''
 Use check_and_make_directories() to replace the following
 '''
-DATA_SAVE_DIR='/dssg/home/acct-aemwx/aemwx-user1/wangyu/results/'
-def save_model_results(model,df_account,df_action):
-    model_name = list(dict(model=model).keys())[0]
-    model.save(f'{DATA_SAVE_DIR}{model_name}')
-    df_account.to_csv(f'{DATA_SAVE_DIR}{model_name}_account.csv')
-    df_action.to_csv(f'{DATA_SAVE_DIR}{model_name}_action.csv')
-    now = datetime.datetime.now().strftime('%Y%m%d-%Hh%M')
-    perf_stats_all = backtest_stats(account_value=df_account_value)
-    perf_stats_all = pd.DataFrame(perf_stats_all)
-    perf_stats_all.to_csv(DATA_SAVE_DIR+f"{model_name}_perf_stats_all_"+now+'.csv')
+
     
 # check_and_make_directories([DATA_SAVE_DIR, TRAINED_MODEL_DIR, TENSORBOARD_LOG_DIR, RESULTS_DIR])
 
 
-
-# df = YahooDownloader(start_date = '2009-01-01',
-#                      end_date = '2021-10-31',
-#                      ticker_list = config_tickers.DOW_30_TICKER).fetch_data()
-
-df = pd.read_csv('/dssg/home/acct-aemwx/aemwx-user1/wangyu/FinRL/datasets/demo.csv',index_col=0)
-
-
-print(f"config_tickers.DOW_30_TICKER: {config_tickers.DOW_30_TICKER}")
-
-
-print(f"df.shape: {df.shape}")
-
-
-df.sort_values(['date','tic'],ignore_index=True).head()
-
-
-
-fe = FeatureEngineer(
-                    use_technical_indicator=True,
-                    tech_indicator_list = config.INDICATORS,
-                    use_vix=False,
-                    use_turbulence=True,
-                    user_defined_feature = False)
-
-processed = fe.preprocess_data(df)
-
-
-list_ticker = processed["tic"].unique().tolist()
-list_date = list(pd.date_range(processed['date'].min(),processed['date'].max()).astype(str))
-combination = list(itertools.product(list_date,list_ticker))
-
-processed_full = pd.DataFrame(combination,columns=["date","tic"]).merge(processed,on=["date","tic"],how="left")
-processed_full = processed_full[processed_full['date'].isin(processed['date'])]
-processed_full = processed_full.sort_values(['date','tic'])
-
-processed_full = processed_full.fillna(0)
-
-
-processed_full.sort_values(['date','tic'],ignore_index=True).head(10)
+processed_full = pd.read_csv('/dssg/home/acct-aemwx/aemwx-user1/wangyu/FinRL/datasets/data_with_vix.csv',index_col=0)
 
 
 train = data_split(processed_full, '2009-01-01','2020-07-01')
@@ -256,10 +208,10 @@ data_risk_indicator = processed_full[(processed_full.date<'2020-07-01') & (proce
 insample_risk_indicator = data_risk_indicator.drop_duplicates(subset=['date'])
 
 
-# insample_risk_indicator.vix.describe()
+insample_risk_indicator.vix.describe()
 
 
-# insample_risk_indicator.vix.quantile(0.996)
+insample_risk_indicator.vix.quantile(0.996)
 
 
 insample_risk_indicator.turbulence.describe()
@@ -283,25 +235,30 @@ env_trade, obs_trade = e_trade_gym.get_sb_env()
 
 
 # print(f"trade.head(): {trade.head()}")
-
-for model in [trained_a2c,trained_ddpg,trained_ppo,trained_td3,trained_sac]:
+DATA_SAVE_DIR='/dssg/home/acct-aemwx/aemwx-user1/wangyu/results/'
+def save_model_results(model,df_account,df_action):
+    model_name = list(dict(model=model).keys())[0]
+    model.save(f'{DATA_SAVE_DIR}{model_name}')
+    df_account.to_csv(f'{DATA_SAVE_DIR}{model_name}_account.csv')
+    df_action.to_csv(f'{DATA_SAVE_DIR}{model_name}_action.csv')
+    now = datetime.datetime.now().strftime('%Y%m%d-%Hh%M')
+    perf_stats_all = backtest_stats(account_value=df_account_value)
+    perf_stats_all = pd.DataFrame(perf_stats_all)
+    perf_stats_all.to_csv(DATA_SAVE_DIR+f"{model_name}_perf_stats_all_"+now+'.csv')
+from tqdm import tqdm
+for model in tqdm([trained_a2c,trained_ddpg,trained_ppo,trained_td3,trained_sac]):
     df_account_value, df_actions = DRLAgent.DRL_prediction(
-        model=trained_a2c,
+        model=model,
         environment = e_trade_gym)
     save_model_results(model,df_account_value,df_actions)
 
-sys.exit()
 
-# print(f"df_account_value.shape: {df_account_value.shape}")
+print(f"df_account_value.shape: {df_account_value.shape}")
 
+print(f"df_account_value.tail(): {df_account_value.tail()}")
 
-# print(f"df_account_value.tail(): {df_account_value.tail()}")
+print(f"df_actions.head(): {df_actions.head()}")
 
-# #
-
-# print(f"df_actions.head(): {df_actions.head()}")
-
-# md
 
 
 '''
@@ -316,12 +273,8 @@ Backtesting plays a key role in evaluating the performance of a trading strategy
 pass in df_account_value, this information is stored in env class
 '''
 
-#
 
-print("==============Get Backtest Results===========")
-
-
-#
+sys.exit()
 
 #baseline stats
 print("==============Get Baseline Stats===========")
